@@ -1,1 +1,1 @@
-{"row_key": [], "\"personal_data\"": [], "\"profesional_data\"": []}
+{"table_name": "employees", "column_families": ["\"personal_data\"", "\"profesional_data\""]}

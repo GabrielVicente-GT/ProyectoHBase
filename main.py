@@ -1,8 +1,12 @@
 import tkinter as tk
 import json
+import os
 
 #create "employees", "personal_data", "profesional_data"
 #put "employees", "Geoffrey", "personal_data:age", 32
+
+
+#lo que busco es que al correr mi main y ingresar put "employees", "Geoffrey", "personal_data:age", 32, lo que haga es que primero encuentre si existe un archivo llamdo employees.json y luego de ello en el cree un rowkey que seria Geoffrey, luego revise si existe en el json el personal_data que en este caso si existe dentro de column families y entonces haga que se agregue el age y luego 32 para que al final el json quede algo asi.  {"table_name": "employees", "column_families": ["\"personal_data\"", "\"profesional_data\""]}
 
 def submit_text():
     command = entry.get()
@@ -30,7 +34,7 @@ def submit_text():
         print("new_value: ",new_value)
         print("value: ", value)
     
-        add_row(table_name, row_key, column, value, new_value)
+        put_data(table_name, column, value)
         output.config(text = f'Row added to table "{table_name}" with row_key {row_key} and column {column} added it variable {new_value} set to {value}\n')
         
     else:
@@ -38,12 +42,25 @@ def submit_text():
 
 # Función para crear la tabla
 def create_table(table_name, columns):
-    table = {"row_key": []}
-    for column in columns:
-        table[column] = []
-    with open(f'{table_name}.json', 'w') as f:
+    
+    table = {
+        "table_name": table_name,
+        "column_families": columns
+    }
+
+    # Crear archivo JSON con la información de la tabla
+    with open(f"{table_name}.json", "w") as f:
         json.dump(table, f)
-    print(f'Table {table_name} created with columns: {columns}')
+
+    print(f"Tabla {table_name} creada con éxito.")
+    
+    # table = {"row_key": []}
+    # for column in columns:
+    #     table[column] = []
+    # with open(f'{table_name}.json', 'w') as f:
+    #     json.dump(table, f)
+    # print(f'Table {table_name} created with columns: {columns}')
+    
     # table = {1: {col: '' for col in columns}}
     # # Eliminar las comillas del nombre de la tabla
     # table_name = table_name.replace('"', '')
@@ -51,34 +68,36 @@ def create_table(table_name, columns):
     #     json.dump(table, f)
 
 #funcion del put
-def add_row(table_name, row_key, column, value, new_value):
-    # Cargar el archivo JSON de la tabla correspondiente.
-    with open(f'{table_name}.json', 'r') as f:
-        table = json.load(f)
+def put_data(table_name, column, value):
+    # Leer información de la tabla desde el archivo JSON
+    with open(f"{table_name}.json", "r") as f:
+        table_info = json.load(f)
 
-    # Buscar si la row_key ya existe en el archivo JSON.
-    if row_key in table['row_key']:
-        # Buscar si la columna ya existe en el archivo JSON.
-        if column in table:
-            # Actualizar el valor de la new_value en el archivo JSON.
-            table[column][table['row_key'].index(row_key)] = new_value
-        else:
-            # Crear una nueva columna y agregar el valor de new_value.
-            table[column] = ['' for _ in range(len(table['row_key']))]
-            table[column][table['row_key'].index(row_key)] = new_value
-    else:
-        # Crear una nueva fila y agregar la row_key y la columna con el valor de new_value.
-        table['row_key'].append(row_key)
-        for key in table.keys():
-            if key != 'row_key':
-                table[key].append('')
-        table[column][table['row_key'].index(row_key)] = new_value
+    # Extraer el nombre de la column family y la columna
+    column_family, column_name = column.split(":")
+    print("column_family: ", column_family)
+    print("column_name: ", column_name)
+    # Verificar si la column family existe
+    if column_family not in table_info["column_families"]:
+        print(f"Error: la column family '{column_family}' no existe en la tabla.")
+        return
 
-    # Guardar el archivo JSON modificado.
-    with open(f'{table_name}.json', 'w') as f:
-        json.dump(table, f)
-        
-    output.config(text=f'Added value {value} to row key {row_key} and column {column} in table {table_name}. {column} is now set to {new_value}')
+    # Leer datos existentes del archivo JSON
+    try:
+        with open(f"{table_name}/{column_family}/{table_name}.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {}
+
+    # Agregar valor a la columna correspondiente
+    data.setdefault(table_name, {}).setdefault(column_family, {})[column_name] = value
+
+    # Escribir datos actualizados en el archivo JSON
+    with open(f"{table_name}/{column_family}/{table_name}.json", "w") as f:
+        json.dump(data, f)
+
+    print(f"Valor '{value}' agregado a la columna '{column}' de la fila '{table_name}' con éxito.")
+
 
 
 
