@@ -5,65 +5,103 @@ import os
 #create "employees", "personal_data", "profesional_data"
 #put "employees", "Geoffrey", "personal_data:age", 32
 
-
-#lo que busco es que al correr mi main y ingresar put "employees", "Geoffrey", "personal_data:age", 32, lo que haga es que primero encuentre si existe un archivo llamdo employees.json y luego de ello en el cree un rowkey que seria Geoffrey, luego revise si existe en el json el personal_data que en este caso si existe dentro de column families y entonces haga que se agregue el age y luego 32 para que al final el json quede algo asi.  {"table_name": "employees", "column_families": ["\"personal_data\"", "\"profesional_data\""]}
 data_dir = "data"
 
 def submit_text():
     command = entry.get()
-    # si es create
     command_parts = command.split(',')
+    #comando de create
     if command.startswith('create'):
-        
         # print(args)
-        table_name = command_parts[0].strip().replace('create ', '').replace('"', '')
-        columns = [col.strip().replace('"', '') for col in command_parts[1:]]
-        print("table_name: ", table_name)
-        print("columns: ", columns)
+        table_name = command_parts[0].replace('create ', '').replace('"', '').replace("'", '').strip()
+        columns = [col.replace('"', '').replace("'", '').strip() for col in command_parts[1:]]
+        # print("table_name: ", table_name)
+        # print("columns: ", columns)
         create_table(table_name, columns)
-        output.config(text=f'Table {table_name} created with columns {columns}')
-        
+    #comando de put
     elif command.startswith('put'):
-        print(command_parts)
-        table_name = command_parts[0].strip().replace('put ', '').replace('"', '')
-        row_key = command_parts[1].strip().replace('"', '')
-        column = command_parts[2].strip().replace('"', '')
-        value = command_parts[3].strip().replace('"', '')
-        print("table_name: ", table_name)
-        print("row_key: ", row_key)
-        print("column: ", column)
-        print("value: ", value)
+        # print(command_parts)
+        table_name = command_parts[0].replace('put ', '').replace('"', '').replace("'", '').strip()
+        row_key = command_parts[1].replace('"', '').replace("'", '').strip()
+        column = command_parts[2].replace('"', '').replace("'", '').strip()
+        value = command_parts[3].replace('"', '').replace("'", '').strip()
+        # print("table_name: ", table_name)
+        # print("row_key: ", row_key)
+        # print("column: ", column)
+        # print("value: ", value)
     
         put_data(table_name, row_key, column, value)
-        output.config(text = f'Row added to table "{table_name}" with row_key {row_key} and column {column} set to {value}\n')
-        
+    #para deshabilitar la tabla
+    elif command.startswith('disable'):
+        table_name = command.replace("disable", '').replace('"','').replace("'", '').strip()
+        # print("table_name: ", table_name)
+        table_state(table_name,False)
+    elif command.startswith('enable') or command.startswith('Is_Enable'):
+        table_name = command.replace("enable", '').replace("Is_Enable", '').replace('"','').replace("'", '').strip()
+        table_state(table_name,True)
     else:
         output.config(text="Comando no reconocido")
 
+#para disable o enable la tabla
+def table_state(table_name, state):
+    # print(table_name)
+    table_file = os.path.join(data_dir, f"{table_name}.json")
+
+    if not os.path.exists(table_file):
+        # print(f"Table '{table_name}' does not exist.")
+        output.config(text = f"Table '{table_name}' does not exist.")
+        return
+    
+    with open(table_file, "r") as f:
+        table_data = json.load(f)
+
+    table_data['state'] = state
+
+    with open(table_file, "w") as f:
+        json.dump(table_data, f)
+
+    if state == True:
+        text = "enable"
+    else:
+        text = "disable"
+
+    output.config(text = f'Table "{table_name}" state is {text}\n')
+
+#para crear una tabla
 def create_table(table_name, columns):
-    table_data = {"columns": columns, "rows": {}}
+    table_data = {"columns": columns, "state":True ,"rows": {}}
     if not os.path.exists(data_dir):
         os.makedirs('data')
     table_file = os.path.join(data_dir, f"{table_name}.json")
-    with open(table_file, "w") as f:
-        json.dump(table_data, f)
-    print(f"Table '{table_name}' created with columns: {columns}")
+    if not os.path.exists(table_file):
+        with open(table_file, "w") as f:
+            json.dump(table_data, f)
+        # print(f"Table '{table_name}' created with columns: {columns}")
+        output.config(text=f'Table "{table_name}" created with columns "{columns}"')
+    else:
+        # print(f"Table '{table_name}' already exists")
+        output.config(text=f'Table "{table_name}" already exists')
 
-
+#para agregar datos a la tabla
 def put_data(table_name, row_key, column, value):
     table_file = os.path.join(data_dir, f"{table_name}.json")
     if not os.path.exists(table_file):
-        print(f"Table '{table_name}' does not exist.")
+        # print(f"Table '{table_name}' does not exist.")
+        output.config(text = f"Table '{table_name}' does not exist.")
         return
 
     with open(table_file, "r") as f:
         table_data = json.load(f)
+    #revisa su estado si esta disable o enable
+    if table_data["state"] == False:
+        output.config(text = f"Table '{table_name}' is disable.")
+        return
 
-    print(table_data)
-    print(table_data["columns"])
+    # revisa si la columna existe
     column_family, qualifier = column.split(":")
     if column_family not in table_data["columns"]:
-        print(f"Column '{column}' does not exist in table '{table_name}'.")
+        # print(f"Column '{column}' does not exist in table '{table_name}'.")
+        output.config(text = f"Column '{column}' does not exist in table '{table_name}'.")
         return
 
     if row_key not in table_data["rows"]:
@@ -77,7 +115,8 @@ def put_data(table_name, row_key, column, value):
     with open(table_file, "w") as f:
         json.dump(table_data, f)
 
-    print(f"Data added to table '{table_name}' for row '{row_key}', column '{column}'.")
+    # print(f"Data added to table '{table_name}' for row '{row_key}', column '{column}'.")
+    output.config(text = f'Row added to table "{table_name}" with row_key "{row_key}" and column "{column}" set to "{value}"\n')
 
 
 

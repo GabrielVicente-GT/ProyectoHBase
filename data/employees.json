@@ -1,1 +1,1 @@
-{"columns": ["personal_data", "profesional_data"], "rows": {"Geoffrey": {"personal_data": {"age": "28", "name": "Geoffrey Smith"}, "profesional_data": {"title": "Software Developer"}}, "Christian": {"personal_data": {"age": "18"}}}}
+{"columns": ["personal_data", "profesional_data"], "state": true, "rows": {"Geoffrey": {"personal_data": {"age": "18"}}, "Andy": {"personal_data": {"age": "23"}}}}
