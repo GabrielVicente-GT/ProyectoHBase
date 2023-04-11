@@ -1,6 +1,7 @@
 import tkinter as tk
 import json
 import os
+import time
 
 #create "employees", "personal_data", "profesional_data"
 #put "employees", "Geoffrey", "personal_data:age", 32
@@ -42,34 +43,11 @@ def submit_text():
     else:
         output.config(text="Comando no reconocido")
 
-#para disable o enable la tabla
-def table_state(table_name, state):
-    # print(table_name)
-    table_file = os.path.join(data_dir, f"{table_name}.json")
-
-    if not os.path.exists(table_file):
-        # print(f"Table '{table_name}' does not exist.")
-        output.config(text = f"Table '{table_name}' does not exist.")
-        return
-    
-    with open(table_file, "r") as f:
-        table_data = json.load(f)
-
-    table_data['state'] = state
-
-    with open(table_file, "w") as f:
-        json.dump(table_data, f)
-
-    if state == True:
-        text = "enable"
-    else:
-        text = "disable"
-
-    output.config(text = f'Table "{table_name}" state is {text}\n')
 
 #para crear una tabla
 def create_table(table_name, columns):
-    table_data = {"columns": columns, "state":True ,"rows": {}}
+    timestamp = int(time.time()*1000)
+    table_data = {"columns": columns, "state":True ,"rows": {}, "created_timestamp":timestamp, "updated_timestamp":timestamp}
     if not os.path.exists(data_dir):
         os.makedirs('data')
     table_file = os.path.join(data_dir, f"{table_name}.json")
@@ -109,8 +87,17 @@ def put_data(table_name, row_key, column, value):
 
     if column_family not in table_data["rows"][row_key]:
         table_data["rows"][row_key][column_family] = {}
+    
+    #actualizar el timestamp de la tabla
+    timestamp = int(time.time()*1000)
+    table_data["updated_timestamp"] = timestamp
+    
+    
+    table_data["rows"][row_key][column_family][qualifier] =  {"value": str(value), "timestamp": timestamp}
+    #ordenarlos 
+    table_data["rows"] = dict(sorted(table_data["rows"].items()))
 
-    table_data["rows"][row_key][column_family][qualifier] = str(value)
+    # print(table_data)
 
     with open(table_file, "w") as f:
         json.dump(table_data, f)
@@ -119,7 +106,33 @@ def put_data(table_name, row_key, column, value):
     output.config(text = f'Row added to table "{table_name}" with row_key "{row_key}" and column "{column}" set to "{value}"\n')
 
 
+#para disable o enable la tabla
+def table_state(table_name, state):
+    # print(table_name)
+    table_file = os.path.join(data_dir, f"{table_name}.json")
 
+    if not os.path.exists(table_file):
+        # print(f"Table '{table_name}' does not exist.")
+        output.config(text = f"Table '{table_name}' does not exist.")
+        return
+    
+    with open(table_file, "r") as f:
+        table_data = json.load(f)
+
+    table_data['state'] = state
+    #actualizar el timestamp de la tabla
+    timestamp = int(time.time()*1000)
+    table_data["updated_timestamp"] = timestamp
+
+    with open(table_file, "w") as f:
+        json.dump(table_data, f)
+
+    if state == True:
+        text = "enable"
+    else:
+        text = "disable"
+
+    output.config(text = f'Table "{table_name}" state is {text}\n')
 
 
 
