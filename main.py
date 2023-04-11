@@ -10,6 +10,7 @@ import time
 data_dir = "data"
 
 def submit_text():
+    clear_output_text()
     command = entry.get()
     command_parts = command.split(',')
     #comando de create
@@ -55,10 +56,17 @@ def submit_text():
         # print(value)
         alter_table(table_name,column,data,value)
         
+    #scan command
+    elif command.startswith("scan"):
+        table_name = command.replace("scan", '').replace('"','').replace("'", '').strip()
+        scan_table(table_name)
+        
     else:
-        output.config(text="Comando no reconocido")
+        output.insert('end',"Comando no reconocido")
+    
 
-
+def clear_output_text():
+    output.delete('1.0', tk.END)
 
 #para crear una tabla
 def create_table(table_name, columns):
@@ -76,31 +84,31 @@ def create_table(table_name, columns):
         with open(table_file, "w") as f:
             json.dump(table_data, f)
         # print(f"Table '{table_name}' created with columns: {columns}")
-        output.config(text=f'Table "{table_name}" created with columns "{column}"')
+        output.insert('end',text=f'Table "{table_name}" created with columns "{column}"')
     else:
         # print(f"Table '{table_name}' already exists")
-        output.config(text=f'Table "{table_name}" already exists')
+        output.insert('end',text=f'Table "{table_name}" already exists')
 
 #para agregar datos a la tabla
 def put_data(table_name, row_key, column, value):
     table_file = os.path.join(data_dir, f"{table_name}.json")
     if not os.path.exists(table_file):
         # print(f"Table '{table_name}' does not exist.")
-        output.config(text = f"Table '{table_name}' does not exist.")
+        output.insert('end',f"Table '{table_name}' does not exist.")
         return
 
     with open(table_file, "r") as f:
         table_data = json.load(f)
     #revisa su estado si esta disable o enable
     if table_data["state"] == False:
-        output.config(text = f"Table '{table_name}' is disable.")
+        output.insert('end',f"Table '{table_name}' is disable.")
         return
 
     # revisa si la columna existe
     column_family, qualifier = column.split(":")
     if column_family not in table_data["columns"]:
         # print(f"Column '{column}' does not exist in table '{table_name}'.")
-        output.config(text = f"Column '{column}' does not exist in table '{table_name}'.")
+        output.insert('end',f"Column '{column}' does not exist in table '{table_name}'.")
         return
 
     if row_key not in table_data["rows"]:
@@ -124,7 +132,7 @@ def put_data(table_name, row_key, column, value):
         json.dump(table_data, f)
 
     # print(f"Data added to table '{table_name}' for row '{row_key}', column '{column}'.")
-    output.config(text = f'Row added to table "{table_name}" with row_key "{row_key}" and column "{column}" set to "{value}"\n')
+    output.insert('end',f'Row added to table "{table_name}" with row_key "{row_key}" and column "{column}" set to "{value}"\n')
 
 
 #para disable o enable la tabla
@@ -134,7 +142,7 @@ def table_state(table_name, state):
 
     if not os.path.exists(table_file):
         # print(f"Table '{table_name}' does not exist.")
-        output.config(text = f"Table '{table_name}' does not exist.")
+        output.insert('end',f"Table '{table_name}' does not exist.")
         return
     
     with open(table_file, "r") as f:
@@ -153,7 +161,7 @@ def table_state(table_name, state):
     else:
         text = "disable"
 
-    output.config(text = f'Table "{table_name}" state is {text}\n')
+    output.insert('end', f'Table "{table_name}" state is {text}\n')
     
 #para alterar la tabla
 def alter_table(table_name, column, data, value):
@@ -161,7 +169,7 @@ def alter_table(table_name, column, data, value):
     
     if not os.path.exists(table_file):
         # print(f"Table '{table_name}' does not exist.")
-        output.config(text = f"Table '{table_name}' does not exist.")
+        output.insert('end', f"Table '{table_name}' does not exist.")
         return
     
     with open(table_file, "r") as f:
@@ -169,11 +177,11 @@ def alter_table(table_name, column, data, value):
     
     if column not in table_data["columns"]:
         # print(f"Column '{column}' does not exist in table '{table_name}'.")
-        output.config(text = f"Column '{column}' does not exist in table '{table_name}'.")
+        output.insert('end', f"Column '{column}' does not exist in table '{table_name}'.")
         return
     
     if data not in table_data["columns"][column]:
-        output.config(text = f"Data '{data}' does not exist in column '{column}' of table '{table_name}'.")
+        output.insert('end', f"Data '{data}' does not exist in column '{column}' of table '{table_name}'.")
         return
     
     table_data["columns"][column][data] = str(value)
@@ -184,14 +192,44 @@ def alter_table(table_name, column, data, value):
     
     with open(table_file, "w") as f:
         json.dump(table_data, f)
-    output.config(text = f'Table "{table_name}" column "{column}" data "{data}" succesfully changed to "{value}."\n')
+    output.insert('end', f'Table "{table_name}" column "{column}" data "{data}" succesfully changed to "{value}."\n')
+    
+    
+    
+#para obtener todos los valores de la tabla
+def scan_table(table_name):
+    table_file = os.path.join(data_dir, f"{table_name}.json")
+    
+    if not os.path.exists(table_file):
+        # print(f"Table '{table_name}' does not exist.")
+        output.insert('end', f"Table '{table_name}' does not exist.")
+        return
+    
+    with open(table_file, "r") as f:
+        table_data = json.load(f)
+        
+    # print(table_data)
+    output.insert('end', "{:<20} {:<30}\n".format("ROW", "COLUMN+CELL"), ('underline'))
+    # Recorrer cada fila y agregarla al objeto Text
+    for row_key, row_data in table_data['rows'].items():
+        for column_family, column_data in row_data.items():
+            for qualifier, qualifier_data in column_data.items():
+                column = f"{column_family}:{qualifier}"
+                value = qualifier_data['value']
+                timestamp = qualifier_data['timestamp']
+                # Agregar la información de la celda a la columna COLUMN+CELL
+                output.insert('end', "{:<20} {:<30}".format(row_key, f"column={column}, timestamp={timestamp}, value={value}\n"))
+                
+    # Estilo de texto en negrita y subrayado para la columna ROW
+    output.tag_configure('underline', underline=True)
+                
 
 
 #generacion del interfaz y lectura de texto
 root = tk.Tk()
 
 # Crear un cuadro de texto
-entry = tk.Entry(root)
+entry = tk.Entry(root, width=100)
 entry.pack()
 
 # Crear un botón de submit
@@ -199,7 +237,8 @@ submit_button = tk.Button(root, text="Submit", command=submit_text)
 submit_button.pack()
 
 # Crear un cuadro de texto para la salida
-output = tk.Label(root, text="")
+output = tk.Text(root, height=50, width=150)
+# output = tk.Label(root, text="")
 output.pack()
 
 root.mainloop()
