@@ -5,6 +5,7 @@ import time
 
 #create "employees", "personal_data", "profesional_data"
 #put "employees", "Geoffrey", "personal_data:age", 32
+#alter "employees", { NAME => "profesional_data", VERSIONS => 3 }
 
 data_dir = "data"
 
@@ -37,17 +38,37 @@ def submit_text():
         table_name = command.replace("disable", '').replace('"','').replace("'", '').strip()
         # print("table_name: ", table_name)
         table_state(table_name,False)
+    #para habilitar la tabla
     elif command.startswith('enable') or command.startswith('Is_Enable'):
         table_name = command.replace("enable", '').replace("Is_Enable", '').replace('"','').replace("'", '').strip()
         table_state(table_name,True)
+    #alter command
+    elif command.startswith('alter'):
+        table_name = command_parts[0].replace("alter", '').replace('"','').replace("'", '').strip()
+        column = command_parts[1].replace("NAME", '').replace("=>", '').replace("{", '').replace('"','').replace("'", '').strip()
+        values = command_parts[2].split("=>")
+        data = values[0].strip()
+        value = values[1].replace("}","").strip()
+        # print(table_name)
+        # print(column)
+        # print(data)
+        # print(value)
+        alter_table(table_name,column,data,value)
+        
     else:
         output.config(text="Comando no reconocido")
+
 
 
 #para crear una tabla
 def create_table(table_name, columns):
     timestamp = int(time.time()*1000)
-    table_data = {"columns": columns, "state":True ,"rows": {}, "created_timestamp":timestamp, "updated_timestamp":timestamp}
+    
+    column = {}
+    for x in columns:
+        column[x]={"DATA_BLOCK_ENCODING":"NONE", "BLOOMFILTER":"ROW", "REPLICATION_SCOPE":"0", "VERSIONS":"1", "COMPRESSION":"NONE",}
+    
+    table_data = {"columns": column, "state":True ,"rows": {}, "created_timestamp":timestamp, "updated_timestamp":timestamp}
     if not os.path.exists(data_dir):
         os.makedirs('data')
     table_file = os.path.join(data_dir, f"{table_name}.json")
@@ -55,7 +76,7 @@ def create_table(table_name, columns):
         with open(table_file, "w") as f:
             json.dump(table_data, f)
         # print(f"Table '{table_name}' created with columns: {columns}")
-        output.config(text=f'Table "{table_name}" created with columns "{columns}"')
+        output.config(text=f'Table "{table_name}" created with columns "{column}"')
     else:
         # print(f"Table '{table_name}' already exists")
         output.config(text=f'Table "{table_name}" already exists')
@@ -133,9 +154,37 @@ def table_state(table_name, state):
         text = "disable"
 
     output.config(text = f'Table "{table_name}" state is {text}\n')
-
-
-
+    
+#para alterar la tabla
+def alter_table(table_name, column, data, value):
+    table_file = os.path.join(data_dir, f"{table_name}.json")
+    
+    if not os.path.exists(table_file):
+        # print(f"Table '{table_name}' does not exist.")
+        output.config(text = f"Table '{table_name}' does not exist.")
+        return
+    
+    with open(table_file, "r") as f:
+        table_data = json.load(f)
+    
+    if column not in table_data["columns"]:
+        # print(f"Column '{column}' does not exist in table '{table_name}'.")
+        output.config(text = f"Column '{column}' does not exist in table '{table_name}'.")
+        return
+    
+    if data not in table_data["columns"][column]:
+        output.config(text = f"Data '{data}' does not exist in column '{column}' of table '{table_name}'.")
+        return
+    
+    table_data["columns"][column][data] = str(value)
+    
+    
+    timestamp = int(time.time()*1000)
+    table_data["updated_timestamp"] = timestamp
+    
+    with open(table_file, "w") as f:
+        json.dump(table_data, f)
+    output.config(text = f'Table "{table_name}" column "{column}" data "{data}" succesfully changed to "{value}."\n')
 
 
 #generacion del interfaz y lectura de texto
