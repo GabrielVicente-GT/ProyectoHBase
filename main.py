@@ -5,7 +5,8 @@ import time
 
 #create "employees", "personal_data", "profesional_data"
 #put "employees", "Geoffrey", "personal_data:age", 32
-#alter "employees", { NAME => "profesional_data", VERSIONS => 3 }
+#alter "employees", { NAME => "profesional_data", VERSIONS => 3 
+# InsertMany 'employees', 'Tomas', 'personal_data:age', 15 , 'Yong', 'personal_data:age', 18, 'Yong', 'profesional_data:position', 'intern'
 
 data_dir = "data"
 
@@ -34,6 +35,62 @@ def submit_text():
         # print("value: ", value)
     
         put_data(table_name, row_key, column, value)
+    #command de putMany
+    elif command.startswith('InsertMany'):
+        print(command_parts)
+        table_name = command_parts[0].replace('InsertMany', '').replace('"', '').replace("'", '').strip()
+        #encontrar  todos los rowkeys
+        i = 1
+        array_row_key = []
+        seguir = True
+        while(seguir):
+            if i < len(command_parts):
+                array_row_key.append(command_parts[i].replace('"', '').replace("'", '').strip())
+                i += 3
+            else:
+                seguir=False
+        
+        #encontrar  todos los column
+        i = 2
+        array_column = []
+        seguir = True
+        while(seguir):
+            if i < len(command_parts):
+                array_column.append(command_parts[i].replace('"', '').replace("'", '').strip())
+                i += 3
+            else:
+                seguir=False
+
+        #encontrar  todos los value
+        i = 3
+        array_value = []
+        seguir = True
+        while(seguir):
+            if i < len(command_parts):
+                array_value.append(command_parts[i].replace('"', '').replace("'", '').strip())
+                i += 3
+            else:
+                seguir=False
+
+        #revisar que todos tengan el mismo len de lo contrario significa que falta algun dato
+        rowKeyLen = len(array_row_key)
+        columLen = len(array_column)
+        valueLen = len(array_value)
+
+        print("table_name: ", table_name)
+        print("row_key: ", array_row_key)
+        print("column: ", array_column)
+        print("value: ", array_value)
+        
+        if rowKeyLen == columLen == valueLen:
+            for l in range(rowKeyLen):
+                put_data(table_name,array_row_key[l],array_column[l],array_value[l])
+            
+
+        else:
+            output.insert('end',f'Error, falta algun argumento')
+
+        
     #para deshabilitar la tabla
     elif command.startswith('disable'):
         table_name = command.replace("disable", '').replace('"','').replace("'", '').strip()
@@ -84,10 +141,10 @@ def create_table(table_name, columns):
         with open(table_file, "w") as f:
             json.dump(table_data, f)
         # print(f"Table '{table_name}' created with columns: {columns}")
-        output.insert('end',text=f'Table "{table_name}" created with columns "{column}"')
+        output.insert('end',f'Table "{table_name}" created with columns "{column}"')
     else:
         # print(f"Table '{table_name}' already exists")
-        output.insert('end',text=f'Table "{table_name}" already exists')
+        output.insert('end',f'Table "{table_name}" already exists')
 
 #para agregar datos a la tabla
 def put_data(table_name, row_key, column, value):
