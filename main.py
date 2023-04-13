@@ -174,6 +174,11 @@ def alter_table(table_name, column, data, value):
     
     with open(table_file, "r") as f:
         table_data = json.load(f)
+
+    #revisa su estado si esta disable o enable
+    if table_data["state"] == False:
+        output.insert('end',f"Table '{table_name}' is disable.")
+        return
     
     if column not in table_data["columns"]:
         # print(f"Column '{column}' does not exist in table '{table_name}'.")
@@ -207,6 +212,11 @@ def scan_table(table_name):
     
     with open(table_file, "r") as f:
         table_data = json.load(f)
+
+    #revisa su estado si esta disable o enable
+    if table_data["state"] == False:
+        output.insert('end',f"Table '{table_name}' is disable.")
+        return
         
     # print(table_data)
     output.insert('end', "{:<20} {:<30}\n".format("ROW", "COLUMN+CELL"), ('underline'))
