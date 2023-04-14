@@ -31,11 +31,11 @@ def submit_text():
     # Eliminar cadenas vacias
     command_parts = [part for part in command_parts if bool(part)]
     
-    print(command_parts)
-    print(len(command_parts))
-    for i in range(len(command_parts)):
-        print(command_parts[i])
-    print("==========================")
+    # print(command_parts)
+    # print(len(command_parts))
+    # for i in range(len(command_parts)):
+    #     print(command_parts[i])
+    # print("==========================")
     #comando de create
     if command.startswith('create'):
         # print(args)
@@ -387,10 +387,15 @@ def scan_table(table_name):
                 
     # Estilo de texto en negrita y subrayado para la columna ROW
     output.tag_configure('underline', underline=True)
-    
+
+# get "employees", "Yong", { COLUMN => "personal_data:age", VERSIONS => 3 }
 def get_table(table_name,row,columns):
     table_file = os.path.join(data_dir, f"{table_name}.json")
-    
+
+    # print(table_name)
+    # print(row)
+    # print(columns)
+
     if not os.path.exists(table_file):
         # print(f"Table '{table_name}' does not exist.")
         output.insert('end', f"Table '{table_name}' does not exist.")
@@ -411,9 +416,49 @@ def get_table(table_name,row,columns):
         for x in columns:
             key.append(x.split("=>")[0].replace('"','').replace("'", '').strip())
             value.append(x.split("=>")[1].replace('"','').replace("'", '').strip())
-        print("key: ", key)
-        print("value: ", value)
-        pass
+        # print("key: ", key)
+        # print("value: ", value)
+        if "COLUMN" in key:
+            indice = key.index("COLUMN")
+            data = value.pop(indice).split(":")
+            #revisar si existe la columna
+            if data[0] not in table_data["rows"][row]:
+                output.insert('end', f"Data '{data[0]}' does not exist in table '{table_name}'.")
+                return
+            column = f"{data[0]}:{data[1]}"
+            values = table_data['rows'][row][data[0]][data[1]]['value']
+            timestamp = table_data['rows'][row][data[0]][data[1]]['timestamp']
+            output.insert('end', "{:<20} {:<30}".format(column, f"timestamp={timestamp}, value={values}\n"))
+
+        else:
+            columnas = table_data['columns']
+            for key_value, data_value in columnas.items():
+                noExiste = False
+                # print("key_value: ", key_value)
+                # print("data_value: ",data_value)
+                for l in range(len(key)):
+                    # print(f"{key[l]} y {value[l]}")
+                    if data_value[key[l]] == value[l]:
+                        # print(f"{key[l]} == {value[l]}")
+                        pass
+                    else:
+                        noExiste = True
+                if noExiste:
+                    # print(f'NO EXISTE para {key_value}')
+                    pass
+                else:
+                    # Recorrer cada fila y agregarla al objeto Text
+                    for row_key, row_data in table_data['rows'][row][key_value].items():
+                        # print("row_key: ", row_key)
+                        # print("row_data: ", row_data)
+                        column = f"{key_value}:{row_key}"
+                        valueAdd = row_data['value']
+                        timestamp = row_data['timestamp']
+                        # Agregar la información de la celda a la columna COLUMN+CELL
+                        output.insert('end', "{:<20} {:<30}".format(column, f"timestamp={timestamp}, value={valueAdd}\n"))
+
+                    
+
     else:
         # print(table_data)
         #revisar que exista la columna que se esta buscando
