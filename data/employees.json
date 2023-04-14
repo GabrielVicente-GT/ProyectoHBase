@@ -1,1 +1,65 @@
-{"columns": {"personal_data": {"DATA_BLOCK_ENCODING": "NONE", "BLOOMFILTER": "ROW", "REPLICATION_SCOPE": "0", "VERSIONS": "1", "COMPRESSION": "NONE"}, "profesional_data": {"DATA_BLOCK_ENCODING": "NONE", "BLOOMFILTER": "ROW", "REPLICATION_SCOPE": "0", "VERSIONS": "3", "COMPRESSION": "NONE"}}, "state": true, "rows": {}, "created_timestamp": 1681431381894, "updated_timestamp": 1681433048313}
+{
+    "columns": {
+        "personal_data": {
+            "DATA_BLOCK_ENCODING": "NONE",
+            "BLOOMFILTER": "ROW",
+            "REPLICATION_SCOPE": "0",
+            "VERSIONS": "1",
+            "COMPRESSION": "NONE"
+        },
+        "profesional_data": {
+            "DATA_BLOCK_ENCODING": "NONE",
+            "BLOOMFILTER": "ROW",
+            "REPLICATION_SCOPE": "8",
+            "VERSIONS": "3",
+            "COMPRESSION": "NONE"
+        }
+    },
+    "state": true,
+    "rows": {
+        "Geoffrey": {
+            "personal_data": {
+                "age": {
+                    "value": "32",
+                    "timestamp": 1681501660433
+                }
+            }
+        },
+        "Tomas": {
+            "personal_data": {
+                "age": {
+                    "value": "15",
+                    "timestamp": 1681500292215
+                },
+                "pet": {
+                    "value": "cat",
+                    "timestamp": 1681503037789
+                }
+            }
+        },
+        "Yong": {
+            "personal_data": {
+                "age": {
+                    "value": "18",
+                    "timestamp": 1681500292219
+                },
+                "pet": {
+                    "value": "dog",
+                    "timestamp": 1681503037794
+                }
+            },
+            "profesional_data": {
+                "position": {
+                    "value": "intern",
+                    "timestamp": 1681500292224
+                },
+                "salary": {
+                    "value": "4000",
+                    "timestamp": 1681503037799
+                }
+            }
+        }
+    },
+    "created_timestamp": 1681431381894,
+    "updated_timestamp": 1681503037799
+}
