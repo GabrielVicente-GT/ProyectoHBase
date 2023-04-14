@@ -117,6 +117,11 @@ def submit_text():
     elif command.startswith("scan"):
         table_name = command.replace("scan", '').replace('"','').replace("'", '').strip()
         scan_table(table_name)
+    
+    #drop command
+    elif command.startswith("drop"):
+        table_name = command.replace("drop", '').replace('"','').replace("'", '').strip()
+        drop_function(table_name)
         
     else:
         output.insert('end',"Comando no reconocido")
@@ -145,6 +150,15 @@ def create_table(table_name, columns):
     else:
         # print(f"Table '{table_name}' already exists")
         output.insert('end',f'Table "{table_name}" already exists')
+
+#Función que hace el drop de un HBase
+def drop_function(table_name):
+    table_file = os.path.join(data_dir, f"{table_name}.json")
+    if os.path.exists(table_file):
+        os.remove(table_file)
+        output.insert('end',f'Table "{table_name}" dropped')
+    else:
+        output.insert('end',f'Table "{table_name}" does not exist')
 
 #para agregar datos a la tabla
 def put_data(table_name, row_key, column, value):
