@@ -2,6 +2,7 @@ import tkinter as tk
 import json
 import os
 import time
+from tabulate import *
 
 #create "employees", "personal_data", "profesional_data"
 #put "employees", "Geoffrey", "personal_data:age", 32
@@ -122,6 +123,11 @@ def submit_text():
     elif command.startswith("drop"):
         table_name = command.replace("drop", '').replace('"','').replace("'", '').strip()
         drop_function(table_name)
+    
+    #describe command
+    elif command.startswith("describe"):
+        table_name = command.replace("describe", '').replace('"','').replace("'", '').strip()
+        describe_function(table_name)
         
     else:
         output.insert('end',"Comando no reconocido")
@@ -159,6 +165,32 @@ def drop_function(table_name):
         output.insert('end',f'Table "{table_name}" dropped')
     else:
         output.insert('end',f'Table "{table_name}" does not exist')
+        
+def describe_function(table_name):
+    table_file = os.path.join(data_dir, f"{table_name}.json")
+    if os.path.exists(table_file):
+        with open(table_file, "r") as f:
+            table_data = json.load(f)
+        headers = ["Column Family", "Column", "Version", "Block Encoding", "Compression", "Bloom Filter", "Replication Scope"]
+        data = []
+        for column in table_data["columns"]:
+            temporalArray = []
+            print("Valores de la columna: ", column)
+            temporalArray.append(column)
+            # data.append([column])
+            for key, value in table_data["columns"][column].items():
+                print("key: ", key)
+                print("value: ", value)
+                temporalArray.append(value)
+                # data.append([key, value])
+            data.append(temporalArray)
+        print(data)
+        table = tabulate(data, headers=headers, tablefmt="pretty")
+        output.insert('end',f'Table "{table_name}"')
+        output.insert('end',table)
+    else:
+        output.insert('end',f'Table "{table_name}" does not exist')
+                
 
 #para agregar datos a la tabla
 def put_data(table_name, row_key, column, value):
