@@ -457,8 +457,6 @@ def get_table(table_name,row,columns):
                         # Agregar la información de la celda a la columna COLUMN+CELL
                         output.insert('end', "{:<20} {:<30}".format(column, f"timestamp={timestamp}, value={valueAdd}\n"))
 
-                    
-
     else:
         # print(table_data)
         #revisar que exista la columna que se esta buscando
