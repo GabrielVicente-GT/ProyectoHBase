@@ -177,6 +177,11 @@ def submit_text():
             get_table(table_name,row,columns)
         else:
             output.insert("Error, Missing Values")
+            
+    #count command
+    elif command.startswith("count"):
+        table_name = command.replace("count", '').replace('"','').replace("'", '').strip()
+        count_function(table_name)
     
         
     # No existe el comando
@@ -229,6 +234,15 @@ def list_function():
             tables.append(file.replace(".json", ""))
     output.insert('end',f'Tables: {tables}')
     
+#Función que hace el count de un HBase
+def count_function(table_name):
+    table_file = os.path.join(data_dir, f"{table_name}.json")
+    if os.path.exists(table_file):
+        with open(table_file, "r") as f:
+            table_data = json.load(f)
+        output.insert('end',f'Rows: {len(table_data["rows"])}')
+    else:
+        output.insert('end',f'Table "{table_name}" does not exist')
     
     
 def describe_function(table_name):
