@@ -128,6 +128,12 @@ def submit_text():
     elif command.startswith("describe"):
         table_name = command.replace("describe", '').replace('"','').replace("'", '').strip()
         describe_function(table_name)
+    
+    #list command
+    elif command.startswith("list"):
+        
+        
+        list_function()
         
     else:
         output.insert('end',"Comando no reconocido")
@@ -165,7 +171,17 @@ def drop_function(table_name):
         output.insert('end',f'Table "{table_name}" dropped')
     else:
         output.insert('end',f'Table "{table_name}" does not exist')
-        
+
+#Función que hace el list de un HBase
+def list_function():
+    tables = []
+    for file in os.listdir(data_dir):
+        if file.endswith(".json"):
+            tables.append(file.replace(".json", ""))
+    output.insert('end',f'Tables: {tables}')
+    
+    
+    
 def describe_function(table_name):
     table_file = os.path.join(data_dir, f"{table_name}.json")
     if os.path.exists(table_file):
