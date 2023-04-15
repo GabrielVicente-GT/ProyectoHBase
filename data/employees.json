@@ -21,7 +21,7 @@
             "personal_data": {
                 "age": {
                     "value": "32",
-                    "timestamp": 1681501660433
+                    "timestamp": 1681531978186
                 }
             }
         },
@@ -29,11 +29,7 @@
             "personal_data": {
                 "age": {
                     "value": "15",
-                    "timestamp": 1681500292215
-                },
-                "pet": {
-                    "value": "cat",
-                    "timestamp": 1681503037789
+                    "timestamp": 1681532000169
                 }
             }
         },
@@ -41,25 +37,17 @@
             "personal_data": {
                 "age": {
                     "value": "18",
-                    "timestamp": 1681500292219
-                },
-                "pet": {
-                    "value": "dog",
-                    "timestamp": 1681503037794
+                    "timestamp": 1681532000174
                 }
             },
             "profesional_data": {
                 "position": {
                     "value": "intern",
-                    "timestamp": 1681500292224
-                },
-                "salary": {
-                    "value": "4000",
-                    "timestamp": 1681503037799
+                    "timestamp": 1681532000179
                 }
             }
         }
     },
-    "created_timestamp": 1681431381894,
-    "updated_timestamp": 1681503037799
+    "created_timestamp": 1681531970847,
+    "updated_timestamp": 1681532000179
 }

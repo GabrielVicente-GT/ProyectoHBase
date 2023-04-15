@@ -13,6 +13,11 @@ from tabulate import *
 # get "employees", "Yong"
 # get "employees", "Yong", { COLUMN => "personal_data:age" }
 # get "employees", "Yong", { COLUMN => "personal_data:age", VERSIONS => 3 }
+#drop "employees"
+#count "employees"
+#list
+#describe "employees"
+#drop_all_function("^empl.*")
 
 data_dir = "data"
 
@@ -139,6 +144,12 @@ def submit_text():
         table_name = command.replace("scan", '').replace('"','').replace("'", '').strip()
         scan_table(table_name)
     
+    #drop all command
+    #Dicho comando recibe una regex
+    elif command.startswith("drop_all"):
+        regex = command.replace("drop_all", '').replace('"','').replace("'", '').strip()
+        drop_all_function(regex)
+    
     #drop command
     elif command.startswith("drop"):
         table_name = command.replace("drop", '').replace('"','').replace("'", '').strip()
@@ -151,8 +162,6 @@ def submit_text():
     
     #list command
     elif command.startswith("list"):
-        
-        
         list_function()
         
     #get command
@@ -183,7 +192,6 @@ def submit_text():
         table_name = command.replace("count", '').replace('"','').replace("'", '').strip()
         count_function(table_name)
     
-        
     # No existe el comando
     else:
         output.insert('end',"Comando no reconocido")
@@ -216,11 +224,12 @@ def create_table(table_name, columns):
 #Función que hace el drop de un HBase
 def drop_function(table_name):
     table_file = os.path.join(data_dir, f"{table_name}.json")
-    if table_file["state"] == False:
-        output.insert('end',f"Table '{table_name}' is disable.")
-        return
-
     if os.path.exists(table_file):
+        with open(table_file, "r") as f:
+            table_data = json.load(f)
+        if table_data["state"] == False:
+            output.insert('end',f"Table '{table_name}' is disable.")
+            return
         os.remove(table_file)
         output.insert('end',f'Table "{table_name}" dropped')
     else:
@@ -243,16 +252,40 @@ def count_function(table_name):
         output.insert('end',f'Rows: {len(table_data["rows"])}')
     else:
         output.insert('end',f'Table "{table_name}" does not exist')
+        
+#Función que hace el drop all de HBase
+def drop_all_function(regex):
+    table_files = os.listdir(data_dir)
+    tables_to_drop = []
+    for table_file in table_files:
+        table_name = table_file.split('.')[0]
+        if re.match(regex, table_name):
+            tables_to_drop.append(table_name)
+    if not tables_to_drop:
+        output.insert('end', f"No tables found matching regex '{regex}'")
+        return
+    for table_name in tables_to_drop:
+        table_file = os.path.join(data_dir, f"{table_name}.json")
+        if not os.path.exists(table_file):
+            output.insert('end', f'Table "{table_name}" does not exist')
+            continue
+        with open(table_file, "r") as f:
+            table_data = json.load(f)
+        if not table_data["state"]:
+            output.insert('end', f"Table '{table_name}' is disabled and cannot be dropped.")
+            continue
+        os.remove(table_file)
+        output.insert('end', f'Table "{table_name}" dropped')
     
-    
+#Función que hace el describe de HBase
 def describe_function(table_name):
     table_file = os.path.join(data_dir, f"{table_name}.json")
-    if table_file["state"] == False:
-        output.insert('end',f"Table '{table_name}' is disable.")
-        return
     if os.path.exists(table_file):
         with open(table_file, "r") as f:
             table_data = json.load(f)
+        if table_data["state"] == False:
+            output.insert('end',f"Table '{table_name}' is disable.")
+            return
         headers = ["Column Family", "Column", "Version", "Block Encoding", "Compression", "Bloom Filter", "Replication Scope"]
         data = []
         for column in table_data["columns"]:
@@ -272,6 +305,7 @@ def describe_function(table_name):
         output.insert('end',table)
     else:
         output.insert('end',f'Table "{table_name}" does not exist')
+
                 
 
 #para agregar datos a la tabla
