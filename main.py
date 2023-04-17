@@ -1,3 +1,11 @@
+# Proyecto 2 Hbase
+# Base de Datos 2 UVG 2023
+
+# GABRIEL VICENTE 20498   
+# JOSÉ BARRERA    20807
+# YONGBUM PARK    20117
+
+
 import tkinter as tk
 import json
 import os
@@ -464,20 +472,20 @@ def drop_all_function(regex):
         if re.match(regex, table_name):
             tables_to_drop.append(table_name)
     if not tables_to_drop:
-        output.insert('end', f"No tables found matching regex '{regex}'")
+        output.insert('\nend', f"No tables found matching regex '{regex}'")
         return
     for table_name in tables_to_drop:
         table_file = os.path.join(data_dir, f"{table_name}.json")
         if not os.path.exists(table_file):
-            output.insert('end', f'Table "{table_name}" does not exist')
+            output.insert('\nend', f'Table "{table_name}" does not exist')
             continue
         with open(table_file, "r") as f:
             table_data = json.load(f)
         if not table_data["state"]:
-            output.insert('end', f"Table '{table_name}' is disabled and cannot be dropped.")
-            return
+            output.insert('\nend', f"Table '{table_name}' is disabled and cannot be dropped.")
+            continue
         os.remove(table_file)
-        output.insert('end', f'Table "{table_name}" dropped')
+        output.insert('\nend', f'Table "{table_name}" dropped')
     
 #Función que hace el describe de HBase
 def describe_function(table_name):
