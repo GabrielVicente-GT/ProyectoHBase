@@ -135,9 +135,12 @@ def submit_text():
         # print("column: ", column)
         # print("data: ", data)
         # print("value: ",value)
-        
-        for l in range(len(data)):
-            alter_table(table_name,column,data[l],value[l])
+        # print(len(data))
+        if len(data) > 0:
+            for l in range(len(data)):
+                alter_table(table_name,column,data[l],value[l])
+        else:
+            alter_table(table_name,column)
         
     #scan command
     elif command.startswith("scan"):
@@ -383,8 +386,11 @@ def table_state(table_name, state):
     output.insert('end', f'Table "{table_name}" state is {text}\n')
     
 #para alterar la tabla
-def alter_table(table_name, column, data, value):
+# alter "employees", { NAME => "profesional_data", METHOD => "delete" }
+# alter "employees", { NAME => "personal_data", METHOD => "delete" }
+def alter_table(table_name, column, data=[], value=[]):
     table_file = os.path.join(data_dir, f"{table_name}.json")
+    timestamp = int(time.time()*1000)
     
     if not os.path.exists(table_file):
         # print(f"Table '{table_name}' does not exist.")
@@ -399,24 +405,53 @@ def alter_table(table_name, column, data, value):
         output.insert('end',f"Table '{table_name}' is disable.")
         return
     
+    # print("table_data[columns]: ", table_data["columns"])
     if column not in table_data["columns"]:
+        table_data["columns"][column] = {"DATA_BLOCK_ENCODING":"NONE", "BLOOMFILTER":"ROW", "REPLICATION_SCOPE":"0", "VERSIONS":"1", "COMPRESSION":"NONE",}
+
         # print(f"Column '{column}' does not exist in table '{table_name}'.")
-        output.insert('end', f"Column '{column}' does not exist in table '{table_name}'.")
-        return
+        output.insert('end', f"Column '{column}' has been added in table '{table_name}'.")
     
-    if data not in table_data["columns"][column]:
-        output.insert('end', f"Data '{data}' does not exist in column '{column}' of table '{table_name}'.")
-        return
+    #revisar si es un METHOD DELETE
+    if "METHOD" == data:
+        if value == "delete":   
+            for row in table_data['rows'].values():
+                if column in row:
+                    del row[column]
+            del table_data['columns'][column]
+            output.insert('end', f"Column '{column}' has been removed of table '{table_name}'.")
+            
+            #eliminarlo en caso que este vacio
+            # print("table_data: ", table_data["rows"])
+            rowDelete = []
+            for testkey in table_data["rows"]:
+                if len(table_data["rows"][testkey]) == 0: 
+                    rowDelete.append(testkey)
+                
+            if len(rowDelete) > 0:    
+                for l in rowDelete:
+                    del table_data["rows"][l]
+                
+            
+            table_data["updated_timestamp"] = timestamp
+            
+            with open(table_file, "w") as f:
+                json.dump(table_data, f)
+            return
+        
+    if len(data) > 0:
+        if data not in table_data["columns"][column]:
+            output.insert('end', f"Data '{data}' does not exist in column '{column}' of table '{table_name}'.")
+            return
     
-    table_data["columns"][column][data] = str(value)
+        table_data["columns"][column][data] = str(value)
+        output.insert('end', f'Table "{table_name}" column "{column}" data "{data}" succesfully changed to "{value}."\n')
     
-    
-    timestamp = int(time.time()*1000)
     table_data["updated_timestamp"] = timestamp
     
     with open(table_file, "w") as f:
         json.dump(table_data, f)
-    output.insert('end', f'Table "{table_name}" column "{column}" data "{data}" succesfully changed to "{value}."\n')
+    # output.insert('end', f'Table "{table_name}" column "{column}" added"\n')
     
     
     

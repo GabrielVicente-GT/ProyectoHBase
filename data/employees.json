@@ -10,26 +10,18 @@
         "profesional_data": {
             "DATA_BLOCK_ENCODING": "NONE",
             "BLOOMFILTER": "ROW",
-            "REPLICATION_SCOPE": "8",
+            "REPLICATION_SCOPE": "0",
             "VERSIONS": "3",
             "COMPRESSION": "NONE"
         }
     },
     "state": true,
     "rows": {
-        "Geoffrey": {
-            "personal_data": {
-                "age": {
-                    "value": "32",
-                    "timestamp": 1681531978186
-                }
-            }
-        },
         "Tomas": {
             "personal_data": {
                 "age": {
                     "value": "15",
-                    "timestamp": 1681532000169
+                    "timestamp": 1681695210448
                 }
             }
         },
@@ -37,17 +29,17 @@
             "personal_data": {
                 "age": {
                     "value": "18",
-                    "timestamp": 1681532000174
+                    "timestamp": 1681695210452
                 }
             },
             "profesional_data": {
                 "position": {
                     "value": "intern",
-                    "timestamp": 1681532000179
+                    "timestamp": 1681695210456
                 }
             }
         }
     },
-    "created_timestamp": 1681531970847,
-    "updated_timestamp": 1681532000179
+    "created_timestamp": 1681694846544,
+    "updated_timestamp": 1681695210456
 }
