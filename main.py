@@ -252,6 +252,9 @@ def count_function(table_name):
     if os.path.exists(table_file):
         with open(table_file, "r") as f:
             table_data = json.load(f)
+        if table_data["state"] == False:
+            output.insert('end',f"Table '{table_name}' is disable.")
+            return
         output.insert('end',f'Rows: {len(table_data["rows"])}')
     else:
         output.insert('end',f'Table "{table_name}" does not exist')
