@@ -468,7 +468,7 @@ def drop_all_function(regex):
             table_data = json.load(f)
         if not table_data["state"]:
             output.insert('end', f"Table '{table_name}' is disabled and cannot be dropped.")
-            continue
+            return
         os.remove(table_file)
         output.insert('end', f'Table "{table_name}" dropped')
     
