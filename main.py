@@ -23,7 +23,7 @@ from tabulate import *
 # get "employees", "Yong", { COLUMN => "personal_data:age" }
 # get "employees", "Yong", { COLUMN => "personal_data:age", VERSIONS => 3 }
 
-# put 'ejemplo, 'Gabriel', 'info_1:corazon', '100', 'Gabriel', 'info_1:edad', '28'. 'Yong', 'info_3:corazon', '200', 'Yong', 'info_2:edad', '50', 'Marco', 'info_1:cabello', '100'
+# put 'ejemplo', 'Gabriel', 'info_1:corazon', '100', 'Gabriel', 'info_1:edad', '28', 'Yong', 'info_3:corazon', '200', 'Yong', 'info_2:edad', '50', 'Marco', 'info_1:cabello', '100'
 
 # scan 'ejemplo'
 # alter "ejemplo", { NAME => "info_2", METHOD => "delete" }
