@@ -5,8 +5,8 @@ import time
 import re
 from tabulate import *
 
-# create 'ejemplo', 'info_1', 'info_2', 'info_3'
 # create "employees", "personal_data", "profesional_data"
+# create 'ejemplo', 'info_1', 'info_2', 'info_3'
 
 # list
 # disable 'employees'
