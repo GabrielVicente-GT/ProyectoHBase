@@ -6,12 +6,28 @@ import re
 from tabulate import *
 
 # create 'ejemplo', 'info_1', 'info_2', 'info_3'
-# alter "ejemplo", { NAME => "info_1", VERSIONS => 3 , REPLICATION_SCOPE => 6 }
-# put 'ejemplo, 'Gabriel', 'info_1:corazon', '100'
-# put 'ejemplo, 'Gabriel', 'info_1:edad', '28'
-# put 'ejemplo, 'Yong', 'info_3:corazon', '200'
-# put 'ejemplo, 'Yong', 'info_2:edad', '50'
-# put 'ejemplo, 'Marco', 'info_1:cabello', '100'
+# create "employees", "personal_data", "profesional_data"
+
+# list
+# disable 'employees'
+# scan 'employees'
+# describe "employees"
+# enable 'employees'
+# scan 'employees'
+# describe "employees"
+
+# put "employees", "Geoffrey", "personal_data:age", 32
+# alter "employees", { NAME => "profesional_data", VERSIONS => 3 , REPLICATION_SCOPE => 8 }
+# put 'employees', 'Tomas', 'personal_data:age', 15 , 'Yong', 'personal_data:age', 18, 'Yong', 'profesional_data:position', 'intern'
+# get "employees", "Yong"
+# get "employees", "Yong", { COLUMN => "personal_data:age" }
+# get "employees", "Yong", { COLUMN => "personal_data:age", VERSIONS => 3 }
+
+# put 'ejemplo, 'Gabriel', 'info_1:corazon', '100', 'Gabriel', 'info_1:edad', '28'. 'Yong', 'info_3:corazon', '200', 'Yong', 'info_2:edad', '50', 'Marco', 'info_1:cabello', '100'
+# scan 'ejemplo'
+# alter "ejemplo", { NAME => "info_2", METHOD => "delete" }
+# scan 'ejemplo'
+# alter "ejemplo", { NAME => "info_2" }
 # scan 'ejemplo'
 # deleteall 'ejemplo', 'Gabriel'
 # scan 'ejemplo'
@@ -19,20 +35,10 @@ from tabulate import *
 # truncate 'ejemplo'
 # scan 'ejemplo'
 
-
-#create "employees", "personal_data", "profesional_data"
-#put "employees", "Geoffrey", "personal_data:age", 32
-#alter "employees", { NAME => "profesional_data", VERSIONS => 3 }
-# alter "employees", { NAME => "profesional_data", VERSIONS => 3 , REPLICATION_SCOPE => 8 }
-# put 'employees', 'Tomas', 'personal_data:age', 15 , 'Yong', 'personal_data:age', 18, 'Yong', 'profesional_data:position', 'intern'
-# get "employees", "Yong"
-# get "employees", "Yong", { COLUMN => "personal_data:age" }
-# get "employees", "Yong", { COLUMN => "personal_data:age", VERSIONS => 3 }
-#drop "employees"
-#count "employees"
-#list
-#describe "employees"
-#drop_all_function("^empl.*")
+# count "employees"
+# drop "employees"
+# list
+# drop_all "^e.*"
 
 data_dir = "data"
 
