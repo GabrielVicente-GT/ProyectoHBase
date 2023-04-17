@@ -5,6 +5,21 @@ import time
 import re
 from tabulate import *
 
+# create 'ejemplo', 'info_1', 'info_2', 'info_3'
+# alter "ejemplo", { NAME => "info_1", VERSIONS => 3 , REPLICATION_SCOPE => 6 }
+# put 'ejemplo, 'Gabriel', 'info_1:corazon', '100'
+# put 'ejemplo, 'Gabriel', 'info_1:edad', '28'
+# put 'ejemplo, 'Yong', 'info_3:corazon', '200'
+# put 'ejemplo, 'Yong', 'info_2:edad', '50'
+# put 'ejemplo, 'Marco', 'info_1:cabello', '100'
+# scan 'ejemplo'
+# deleteall 'ejemplo', 'Gabriel'
+# scan 'ejemplo'
+# delete 'ejemplo', 'Yong', 'info_2:edad'
+# truncate 'ejemplo'
+# scan 'ejemplo'
+
+
 #create "employees", "personal_data", "profesional_data"
 #put "employees", "Geoffrey", "personal_data:age", 32
 #alter "employees", { NAME => "profesional_data", VERSIONS => 3 }
@@ -167,6 +182,29 @@ def submit_text():
     elif command.startswith("list"):
         list_function()
         
+        #truncate command
+    elif command.startswith("truncate"):
+        table_name = command.replace("truncate", '').replace('"','').replace("'", '').strip()
+        # print(table_name)
+        truncate_command(table_name)
+        
+    #delete all
+    elif command.startswith("deleteall"):
+        
+        table_name = command_parts[0].replace('deleteall', '').replace('"', '').replace("'", '').strip()
+        columns = [col.replace('"', '').replace("'", '').strip() for col in command_parts[1:]]
+        delete_all_function(table_name,columns[0])
+        
+    elif command.startswith("delete"):
+        
+        table_name = command_parts[0].replace('delete', '').replace('"', '').replace("'", '').strip()
+        columns = [col.replace('"', '').replace("'", '').strip() for col in command_parts[1:]]
+        
+        if len(columns) > 2:
+            delete_function(table_name,columns[0],columns[1] ,int(columns[2]))
+        else:
+            delete_function(table_name,columns[0],columns[1])
+        
     #get command
     elif command.startswith("get"):
         # print(command_parts)
@@ -237,6 +275,157 @@ def drop_function(table_name):
         output.insert('end',f'Table "{table_name}" dropped')
     else:
         output.insert('end',f'Table "{table_name}" does not exist')
+
+
+def truncate_command(table_name):
+    table_file = os.path.join(data_dir, f"{table_name}.json")
+    if os.path.exists(table_file):
+        
+        with open(table_file, "r") as f:
+            table_data = json.load(f)
+            
+        if table_data["state"] == True:
+            output.insert('end', f"\nTruncating '{table_name}' table  (it may take a while)\n")
+            output.insert('end', f"- Disabling table...\n")
+            # table_state(table_name,False)
+            output.insert('end', f"- Truncating table...\n")
+            
+            # Leer el archivo JSON
+            with open('./data/'+table_name+'.json') as archivo:
+                data = json.load(archivo)
+
+            # Extraer las columnas, versiones y replication scopes
+            columnas = []
+            for nombre_columna, datos_columna in data['columns'].items():
+                columna = [nombre_columna, datos_columna['VERSIONS'], datos_columna['REPLICATION_SCOPE']]
+                columnas.append(columna)
+
+            # print(columnas)
+
+            drop_function(table_name)
+            
+            create_table(table_name, [name[0] for name in columnas])
+            
+            for column in columnas:
+                data = ['VERSIONS', 'REPLICATION_SCOPE']
+                value = [column[1],column[2]]
+                # print("table_name: ", table_name)
+                # print("column: ", column[0])
+                # print("data: ",  data)
+                # print("value: ", value)
+                
+                for l in range(len(data)):
+                    alter_table(table_name,column[0],data[l],value[l])
+        # Imprimir el resultado
+        # output.insert('end', f"truncating data {columnas}\n")
+        else:
+            output.insert('end',f"Table '{table_name}' is disable.")
+            return
+    else:
+        output.insert('end',f'Table "{table_name}" does not exist')
+        
+def delete_function(table_name, row, column, time_stamp = None):
+    
+    table_file = os.path.join(data_dir, f"{table_name}.json")
+    if os.path.exists(table_file):
+        
+        with open(table_file, "r") as f:
+            table_data = json.load(f)
+            
+        if table_data["state"] == True:
+
+            with open(table_file, "r") as f:
+                data = json.load(f)
+            
+            # Extraer la columna y la subcolumna de la celda que se desea eliminar
+            column, subcolumn = column.split(':')
+            
+            # Verificar si la celda que se desea eliminar existe y su marca de tiempo es la correcta
+            if row in data['rows'] and column in data['rows'][row] and subcolumn in data['rows'][row][column]:
+                if data['rows'][row][column][subcolumn]['timestamp'] == time_stamp or time_stamp == None:
+                    # Eliminar la celda
+                    del data['rows'][row][column][subcolumn]
+                    
+                    # Guardar los cambios en el archivo JSON
+                    with open(table_file, 'w') as f:
+                        json.dump(data, f)
+
+                    output.insert('end', f"The cell has been successfully deleted.\n")
+                else:
+                    output.insert('end', f"The cell cannot be deleted because the supplied timestamp does not match the timestamp of the cell.\n")
+            else:
+                output.insert('end', f"The cell cannot be deleted because it does not exist.\n")
+            
+            # Leer el archivo JSON y convertirlo en un diccionario
+            with open(table_file, 'r') as f:
+                data = json.load(f)
+
+            # Eliminar las propiedades vacías
+            for row in data['rows']:
+                for prop in list(data['rows'][row]):
+                    if not bool(data['rows'][row][prop]):
+                        del data['rows'][row][prop]
+
+            # Guardar el resultado en un nuevo archivo JSON
+            with open(table_file, 'w') as f:
+                json.dump(data, f)
+
+            # Cargar el archivo JSON
+            with open(table_file, 'r') as f:
+                data = json.load(f)
+
+            # Recorrer cada fila en el archivo
+            for key in list(data['rows'].keys()):
+                # Si la fila no tiene valores, eliminarla
+                if not data['rows'][key]:
+                    del data['rows'][key]
+
+            # Guardar los cambios en el archivo JSON
+            with open(table_file, 'w') as f:
+                json.dump(data, f)
+
+        else:
+            output.insert('end',f"Table '{table_name}' is disable.")
+            return
+    else:
+        output.insert('end',f'Table "{table_name}" does not exist')
+    
+
+
+
+
+def delete_all_function(table_name, row):
+    table_file = os.path.join(data_dir, f"{table_name}.json")
+    if os.path.exists(table_file):
+        
+        with open(table_file, "r") as f:
+            table_data = json.load(f)
+            
+        if table_data["state"] == True:
+            # pass
+            # output.insert('end', f"*---------{table_name}\n")
+            # output.insert('end', f"*---------{row}\n")
+            # Leer el archivo JSON
+            with open('./data/'+table_name+'.json') as archivo:
+                data = json.load(archivo)
+
+            # Elimina la fila si existe
+            if row in data['rows']:
+                del data['rows'][row]
+
+            # Escribe el archivo JSON actualizado
+            with open('./data/'+table_name+'.json', 'w') as f:
+                json.dump(data, f)
+        
+            output.insert('end',f"From '{table_name}' deleted {row} row")
+
+        else:
+            output.insert('end',f"Table '{table_name}' is disable.")
+            return
+    else:
+        output.insert('end',f'Table "{table_name}" does not exist')
+
+
 
 #Función que hace el list de un HBase
 def list_function():
